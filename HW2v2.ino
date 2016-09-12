@@ -17,13 +17,14 @@ int lastnumpressed; //the initial number pressed on the keypad
 int timespressed; //times the number has been pressed
 char letter; //stores letter that needs to be printed
 const byte maxtimespressed[9]={
-  1,4,4,4,4,4,5,4,5}; //stores maximum number of times any given key can be pressed before looping back
+  2,4,4,4,4,4,5,4,5}; //stores maximum number of times any given key can be pressed before looping back
 const int wait=500; //time to wait for additional presses to same number
 const int preventholddelay=50; //time to wait to prevent cycling through things too quickly
 unsigned long basetime = 0; //basetime for while loop
 unsigned long pressedtime = 0; //last time a button was pressed
 unsigned long elapsed=0; //elapsed time in while loop
 bool pressed;
+int read1;
 int counter=0;
 int buttonState;
 int lastButtonState = 0;
@@ -45,9 +46,10 @@ void setup()
 }
 void loop()
 {
+  
   numpressed=16; //reset numpressed (16 doesn't refer to any button on the keypad)
-  if (millis()-pressedtime >4000 && pressed){
-      Serial.println("Output");
+  if (millis()-pressedtime >1000 && pressed){
+      //Serial.println("Output");
       Serial.println(letter);
       pressedtime = millis();
       pressed = false;
@@ -57,24 +59,25 @@ void loop()
     pressedtime = millis();
     pressed = true;
     if (numpressed==lastnumpressed){ //if it was the same as before,
-      if (millis()-basetime < 2000) {
+      if (millis()-basetime < 500) {
         incrementtimespressed(); //increment "timespressed"
         basetime = millis();
         definepress(); //use "numpressed" and "timespressed" to define "letter"
-        Serial.println("Repeat");
+        //Serial.println("Repeat");
         //Serial.println(letter); //print the letter that was defined
         rowshigh(); //return all rows high
       } else {
-        timespressed=1;
+        timespressed = 1;
         definepress();
         basetime = millis();
-        Serial.println("TimedOut");
+        //Serial.println("TimedOut");
         //Serial.println(letter);
       }
     } else { //if the number that was pressed was different than before,
       timespressed=1;
       definepress();
-      Serial.println("Different");
+      basetime = millis();
+      //Serial.println("Different");
       //Serial.println(letter); //print the letter that was defined
     }
     lastnumpressed = numpressed;      
@@ -82,6 +85,28 @@ void loop()
 }
 
 void definepress(){ //uses "numpressed" and "timespressed" to define "letter"
+    if (numpressed==1){
+    if (timespressed==1){
+      letter=' ';
+    }
+    if (timespressed==2){
+      letter='1';
+    }
+  }  
+  if (numpressed==2){
+    if (timespressed==1){
+      letter='A';
+    }
+    if (timespressed==2){
+      letter='B';
+    }
+    if (timespressed==3){
+      letter='C';
+    }
+    if (timespressed==4){
+      letter='2';
+    }
+  }
   if (numpressed==2){
     if (timespressed==1){
       letter='A';
@@ -222,7 +247,8 @@ bool findpress() //finds a press to define numpressed, if any press occurs, retu
    }
   else
   {
-   if(debounceCheck(c2)) //if the second column is now low, "2" has been pressed
+
+   if(colm2==LOW) //if the second column is now low, "2" has been pressed
    {
     numpressed = 2;
     pressfound=true;
@@ -300,9 +326,10 @@ bool findpress() //finds a press to define numpressed, if any press occurs, retu
   rowshigh();
   return pressfound; //function returns true if any press found, otherwise returns false
 }
-
-bool debounceCheck(button){  //Checks a pin for a press taking into account bouncing
-  int read1 = digitalRead(button); 
+/*
+bool debounceCheck(int button){  //Checks a pin for a press taking into account bouncing
+  bool buttonpress=false;
+  read1=digitalRead(button);
   if (read1 != lastButtonState){
   lastDebounceTime=millis();
   }
@@ -311,13 +338,14 @@ bool debounceCheck(button){  //Checks a pin for a press taking into account boun
        buttonState= read1;
           if (buttonState== LOW){
              counter=counter+1;
-             return true;
+             buttonpress=true;
          }
        }
     }  
-  lastButtonState=read1;  
+  lastButtonState=read1;
+  return buttonpress;  
   
-}
+}*/
 
 void incrementtimespressed(){ //increment "timespressed" until at max value stored in maxtimespressed for that lastnumpressed, then roll over to 1
   if (timespressed==maxtimespressed[lastnumpressed]){ //if at the maximum,
