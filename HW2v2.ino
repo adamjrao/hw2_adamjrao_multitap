@@ -21,57 +21,68 @@ const byte maxtimespressed[9]={
 const int wait=500; //time to wait for additional presses to same number
 const int preventholddelay=50; //time to wait to prevent cycling through things too quickly
 unsigned long basetime = 0; //basetime for while loop
+unsigned long pressedtime = 0; //last time a button was pressed
 unsigned long elapsed=0; //elapsed time in while loop
+bool pressed;
+int counter=0;
+int buttonState;
+int lastButtonState = 0;
+unsigned long debounceDelay=50;
+unsigned long lastDebounceTime=0;
 
 void setup()
 {
   pinMode(r1,OUTPUT);
   pinMode(r2,OUTPUT);
   pinMode(r3,OUTPUT);
-  //pinMode(r4,OUTPUT);
   pinMode(c1,INPUT_PULLUP);
   pinMode(c2,INPUT_PULLUP);
   pinMode(c3,INPUT_PULLUP);
-  //pinMode(c4,INPUT);
   Serial.begin(9600);
   digitalWrite(c1,HIGH);
   digitalWrite(c2,HIGH);
   digitalWrite(c3,HIGH);
-  //digitalWrite(c4,HIGH);
 }
 void loop()
 {
   numpressed=16; //reset numpressed (16 doesn't refer to any button on the keypad)
+  if (millis()-pressedtime >4000 && pressed){
+      Serial.println("Output");
+      Serial.println(letter);
+      pressedtime = millis();
+      pressed = false;
+      timespressed = 1;
+  }
   if (findpress()){ //look for presses, if one has occurred, identify it and continue
-    
+    pressedtime = millis();
+    pressed = true;
     if (numpressed==lastnumpressed){ //if it was the same as before,
-     
       if (millis()-basetime < 2000) {
-        
         incrementtimespressed(); //increment "timespressed"
-        //basetime=basetime+(wait-(wait-elapsed)); //roll up the base time, to allow another wait period until next press of the same button
         basetime = millis();
         definepress(); //use "numpressed" and "timespressed" to define "letter"
-        Serial.println(letter); //print the letter that was defined
+        Serial.println("Repeat");
+        //Serial.println(letter); //print the letter that was defined
         rowshigh(); //return all rows high
       } else {
         timespressed=1;
         definepress();
         basetime = millis();
-        Serial.println(letter);
+        Serial.println("TimedOut");
+        //Serial.println(letter);
       }
     } else { //if the number that was pressed was different than before,
-      
+      timespressed=1;
       definepress();
-     Serial.println(letter); //print the letter that was defined
-        
+      Serial.println("Different");
+      //Serial.println(letter); //print the letter that was defined
     }
     lastnumpressed = numpressed;      
   }
 }
 
-void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter"
-  if (lastnumpressed==2){
+void definepress(){ //uses "numpressed" and "timespressed" to define "letter"
+  if (numpressed==2){
     if (timespressed==1){
       letter='A';
     }
@@ -85,7 +96,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='2';
     }
   }
-  if (lastnumpressed==3){
+  if (numpressed==3){
     if (timespressed==1){
       letter='D';
     }
@@ -99,7 +110,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='3';
     }
   }
-  if (lastnumpressed==4){
+  if (numpressed==4){
     if (timespressed==1){
       letter='G';
     }
@@ -113,7 +124,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='4';
     }
   }
-  if (lastnumpressed==5){
+  if (numpressed==5){
     if (timespressed==1){
       letter='J';
     }
@@ -127,7 +138,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='5';
     }
   }
-  if (lastnumpressed==6){
+  if (numpressed==6){
     if (timespressed==1){
       letter='M';
     }
@@ -141,7 +152,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='6';
     }
   }
-  if (lastnumpressed==7){
+  if (numpressed==7){
     if (timespressed==1){
       letter='P';
     }
@@ -158,7 +169,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='7';
     }
   }
-  if (lastnumpressed==8){
+  if (numpressed==8){
     if (timespressed==1){
       letter='T';
     }
@@ -172,7 +183,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
       letter='8';
     }
   }
-  if (lastnumpressed==9){
+  if (numpressed==9){
     if (timespressed==1){
       letter='W';
     }
@@ -191,6 +202,7 @@ void definepress(){ //uses "lastnumpressed" and "timespressed" to define "letter
   }
 }
 
+
 bool findpress() //finds a press to define numpressed, if any press occurs, returns true
 {
   bool pressfound=false; //variable for press detection
@@ -206,21 +218,24 @@ bool findpress() //finds a press to define numpressed, if any press occurs, retu
   {
    numpressed = 1;
    pressfound=true;
-   delay(200);}
+   delay(200);
+   }
   else
   {
-   if(colm2==LOW) //if the second column is now low, "2" has been pressed
+   if(debounceCheck(c2)) //if the second column is now low, "2" has been pressed
    {
     numpressed = 2;
     pressfound=true;
-    delay(200);}
+    delay(200);
+    }
   else
   {
    if(colm3==LOW) //if the third column is now low, "3" has been pressed
    {
     numpressed = 3;
     pressfound=true;
-    delay(200);}
+    delay(200);
+    }
   }}
 
   digitalWrite(r1,HIGH);
@@ -233,21 +248,24 @@ bool findpress() //finds a press to define numpressed, if any press occurs, retu
   {
     numpressed = 4;
     pressfound=true;
-    delay(200);}
+    delay(200);
+    }
   else
   {
    if(colm2==LOW) //if the second column is now low, "5" has been pressed
    {
     numpressed = 5;
     pressfound=true;
-    delay(200);}
+    delay(200);
+    }
   else
   {
    if(colm3==LOW) //if the third column is now low, "6" has been pressed
    {
     numpressed = 6;
     pressfound=true;
-    delay(200);}
+    delay(200);
+    }
   }}
 
   digitalWrite(r1,HIGH);
@@ -260,24 +278,45 @@ bool findpress() //finds a press to define numpressed, if any press occurs, retu
   {
     numpressed = 7;
     pressfound=true;
-     delay(200);}
+     delay(200);
+     }
   else
   {
    if(colm2==LOW)  //if the second column is now low, "8" has been pressed
    {
     numpressed = 8;
     pressfound=true;
-       delay(200);}
+    delay(200);
+    }
   else
   {
    if(colm3==LOW)  //if the third column is now low, "9" has been pressed
    {
     numpressed = 9;
     pressfound=true;
-       delay(200);}
+    delay(200);
+    }
   }}
   rowshigh();
   return pressfound; //function returns true if any press found, otherwise returns false
+}
+
+bool debounceCheck(button){  //Checks a pin for a press taking into account bouncing
+  int read1 = digitalRead(button); 
+  if (read1 != lastButtonState){
+  lastDebounceTime=millis();
+  }
+  if ((millis()-lastDebounceTime)>debounceDelay) {
+    if (read1 != buttonState){
+       buttonState= read1;
+          if (buttonState== LOW){
+             counter=counter+1;
+             return true;
+         }
+       }
+    }  
+  lastButtonState=read1;  
+  
 }
 
 void incrementtimespressed(){ //increment "timespressed" until at max value stored in maxtimespressed for that lastnumpressed, then roll over to 1
