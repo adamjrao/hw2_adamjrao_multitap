@@ -50,7 +50,7 @@ void loop()
   numpressed=16; //reset numpressed (16 doesn't refer to any button on the keypad)
   if (millis()-pressedtime >1000 && pressed){
       //Serial.println("Output");
-      Serial.println(letter);
+      Serial.print''(letter);
       pressedtime = millis();
       pressed = false;
       timespressed = 1;
