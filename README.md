@@ -10,6 +10,8 @@ This repository contains designs for a text entry device that utilizes T9 text e
 
 ![alt tag](https://raw.githubusercontent.com/adamjrao/hw2_adamjrao_multitap/master/cup.jpg)
 
+Lessons learned: Unfortunately I did not have time to wire the buttons to the rope, I underestimated the program logic for T9 implementation and should have given myself more time. However, I am confident that the current wiring could be ported over for use with linear buttons along a rope.
+
 
 Video Link:
 https://drive.google.com/file/d/0B7P3Z53almCpSnVtQzI3TWxqUjg/view?usp=sharing
